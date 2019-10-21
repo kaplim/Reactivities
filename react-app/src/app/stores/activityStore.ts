@@ -8,10 +8,10 @@ configure({enforceActions: 'always'});
 class ActivityStore {
 
     @observable activityRegistry = new Map();
-    @observable activities: IActivity[] = [];
-    @observable selectedActivity: IActivity | undefined; // = undefined;
+    //@observable activities: IActivity[] = [];
+    @observable activity: IActivity | null = null;
     @observable loadingInitial = false;
-    @observable editMode = false;
+    //@observable editMode = false;
     @observable submitting = false;
     @observable target = '';
 
@@ -42,6 +42,38 @@ class ActivityStore {
         }
     }
 
+    @action loadActivity = async (id: string) => {
+        let activity = this.getActivity(id);
+        if (activity) {
+            this.activity = activity;
+        }
+        else {
+            this.loadingInitial = true;
+            try {
+                activity = await agent.Activities.details(id);
+                
+                runInAction('getting activity', () => {
+                    this.activity = activity;
+                    this.loadingInitial = false;
+                });
+            }
+            catch (error) {
+                runInAction('getting activity error', () => {
+                    this.loadingInitial = false;
+                });
+                console.log(error);
+            }
+        }
+    }
+
+    getActivity = (id: string) => {
+        return this.activityRegistry.get(id);
+    }
+
+    @action clearActivity = () => {
+        this.activity = null;
+    }
+
     @action createActivity = async (activity: IActivity) => {
         this.submitting = true;
 
@@ -50,7 +82,7 @@ class ActivityStore {
             
             runInAction('creating activity', () => {
                 this.activityRegistry.set(activity.id, activity);
-                this.editMode = false;
+                //this.editMode = false;
                 this.submitting = false;
             });
         }
@@ -70,8 +102,8 @@ class ActivityStore {
 
             runInAction('editing activity', () => {
                 this.activityRegistry.set(activity.id, activity);
-                this.selectedActivity = activity;
-                this.editMode = false;
+                this.activity = activity;
+                //this.editMode = false;
                 this.submitting = false;
             });
         }
@@ -107,28 +139,28 @@ class ActivityStore {
         }
     }
 
-    @action openCreateForm = () => {
-        this.editMode = true;
-        this.selectedActivity = undefined;
-    }
+    // @action openCreateForm = () => {
+    //     this.editMode = true;
+    //     this.activity = null;
+    // }
 
-    @action openEditForm = (id: string) => {
-        this.editMode = true;
-        this.selectedActivity = this.activityRegistry.get(id);
-    }
+    // @action openEditForm = (id: string) => {
+    //     this.editMode = true;
+    //     this.activity = this.activityRegistry.get(id);
+    // }
     
-    @action cancelSelectedActivity = () => {
-        this.selectedActivity = undefined;
-    }
+    // @action cancelSelectedActivity = () => {
+    //     this.activity = null;
+    // }
     
-    @action cancelFormOpen = () => {
-        this.editMode = false;
-    }
+    // @action cancelFormOpen = () => {
+    //     this.editMode = false;
+    // }
 
-    @action selectActivity = (id: string) => {
-        this.selectedActivity = this.activityRegistry.get(id);
-        this.editMode = false;
-    }
+    // @action selectActivity = (id: string) => {
+    //     this.activity = this.activityRegistry.get(id);
+    //     this.editMode = false;
+    // }
 }
 
 export default createContext(new ActivityStore())
