@@ -25,6 +25,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc.Authorization;
+using AutoMapper;
 
 namespace API
 {
@@ -41,7 +42,9 @@ namespace API
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddDbContext<DataContext>(opt => {
-                opt.UseSqlite(Configuration.GetConnectionString("DefaultConnection"));
+                opt.UseLazyLoadingProxies();
+                opt.UseSqlite(Configuration.GetConnectionString(
+                    "DefaultConnection"));
             });
             services.AddCors(opt => {
                 opt.AddPolicy("CorsPolicy", policy => {
@@ -50,6 +53,7 @@ namespace API
                 });
             });
             services.AddMediatR(typeof(ListActivities.Handler).Assembly);
+            services.AddAutoMapper(typeof(ListActivities.Handler));
             services.AddMvc(opt =>
             {
                 var policy = new AuthorizationPolicyBuilder()
@@ -66,13 +70,24 @@ namespace API
             identityBuilder.AddEntityFrameworkStores<DataContext>();
             identityBuilder.AddSignInManager<SignInManager<AppUser>>();
 
+            services.AddAuthorization(opt =>
+            {
+                opt.AddPolicy("IsActivityHost", policy =>
+                {
+                    policy.Requirements.Add(new IsHostRequirement());
+                });
+            });
+            services.AddTransient<
+                IAuthorizationHandler, IsHostRequirementHandler>();
+
             var key = new SymmetricSecurityKey(
                 Encoding.UTF8.GetBytes(Configuration["TokenKey"]));
 
             services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 .AddJwtBearer(opt =>
                 {
-                    opt.TokenValidationParameters = new TokenValidationParameters
+                    opt.TokenValidationParameters =
+                        new TokenValidationParameters
                     {
                         ValidateIssuerSigningKey = true,
                         IssuerSigningKey = key,
