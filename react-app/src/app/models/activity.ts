@@ -6,9 +6,9 @@ export interface IActivity {
     date: Date;  // | null;  //string;
     city: string;
     venue: string;
-    // isGoing: boolean;
-    // isHost: boolean;
-    // attendees: IAttendee[];
+    isGoing: boolean;
+    isHost: boolean;
+    attendees: IAttendee[];
     // comments: IComment[];
 }
 
@@ -34,10 +34,10 @@ export class ActivityFormValues implements IActivityFormValues {
     }
 }
   
-// export interface IAttendee {
-//     username: string;
-//     displayName: string;
-//     image: string;
-//     isHost: boolean;
-//     following?: boolean;
-// }
+export interface IAttendee {
+    username: string;
+    displayName: string;
+    image: string;
+    isHost: boolean;
+    //following?: boolean;
+}
