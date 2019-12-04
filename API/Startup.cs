@@ -14,6 +14,7 @@ using Persistence;
 using Microsoft.EntityFrameworkCore;
 using MediatR;
 using Application.Activities;
+using Application.Profiles;
 using FluentValidation.AspNetCore;
 using API.Middleware;
 using Domain;
@@ -119,6 +120,7 @@ namespace API
             services.AddScoped<IJwtGenerator, JwtGenerator>();
             services.AddScoped<IUserAccessor, UserAccessor>();
             services.AddScoped<IPhotoAccessor, PhotoAccessor>();
+            services.AddScoped<IProfileReader, ProfileReader>();
             services.Configure<CloudinarySettings>
                 (Configuration.GetSection("Cloudinary"));
         }

@@ -16,32 +16,32 @@ namespace Application.Profiles
 
         public class Handler : IRequestHandler<Query, Profile>
         {
-            private readonly DataContext _context;
-            public Handler(DataContext context)
-            {
-                _context = context;
-            }
-            // private readonly IProfileReader _profileReader;
-            // public Handler(IProfileReader profileReader)
+            // private readonly DataContext _context;
+            // public Handler(DataContext context)
             // {
-            //     _profileReader = profileReader;
+            //     _context = context;
             // }
+            private readonly IProfileReader _profileReader;
+            public Handler(IProfileReader profileReader)
+            {
+                _profileReader = profileReader;
+            }
 
             public async Task<Profile> Handle(Query request,
                 CancellationToken cancellationToken)
             {
-                var user = await _context.Users.SingleOrDefaultAsync(x =>
-                    x.UserName == request.Username);
+                // var user = await _context.Users.SingleOrDefaultAsync(x =>
+                //     x.UserName == request.Username);
 
-                return new Profile
-                {
-                    DisplayName = user.DisplayName,
-                    Username = user.UserName,
-                    Image = user.Photos.FirstOrDefault(x => x.IsMain)?.Url,
-                    Photos = user.Photos,
-                    Bio = user.Bio
-                };
-                //return await _profileReader.ReadProfile(request.Username);
+                // return new Profile
+                // {
+                //     DisplayName = user.DisplayName,
+                //     Username = user.UserName,
+                //     Image = user.Photos.FirstOrDefault(x => x.IsMain)?.Url,
+                //     Photos = user.Photos,
+                //     Bio = user.Bio
+                // };
+                return await _profileReader.ReadProfile(request.Username);
             }
         }
     }
