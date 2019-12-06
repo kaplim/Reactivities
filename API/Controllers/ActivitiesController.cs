@@ -20,16 +20,13 @@ namespace API.Controllers
         // }
         
         [HttpGet]
-        public async Task<ActionResult<List<ActivityDto>>> List()
+        public async Task<ActionResult<ListActivities.ActivitiesEnvelope>>
+            List(int? limit, int? offset, bool isGoing, bool isHost,
+                DateTime? startDate)
         {
-            return await Mediator.Send(new ListActivities.Query());
+            return await Mediator.Send(new ListActivities.Query(limit, 
+                offset, isGoing, isHost, startDate));
         }
-        // public async Task<ActionResult<List<Activity>>> List(
-        //     CancellationToken cancellationToken)
-        // {
-        //     return await _mediator.Send(new ListActivities.Query(),
-        //         cancellationToken);
-        // }
 
         [HttpGet("{id}")]
         //[Authorize]
