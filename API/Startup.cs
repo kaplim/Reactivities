@@ -42,16 +42,37 @@ namespace API
         public IConfiguration Configuration { get; }
 
         // This method gets called by the runtime. Use this method to add services to the container.
-        public void ConfigureServices(IServiceCollection services)
+        public void ConfigureDevelopmentServices(IServiceCollection services)
         {
             services.AddDbContext<DataContext>(opt => {
                 opt.UseLazyLoadingProxies();
                 opt.UseSqlite(Configuration.GetConnectionString(
                     "DefaultConnection"));
             });
+
+            ConfigureServices(services);
+        }
+        
+        public void ConfigureProductionServices(IServiceCollection services)
+        {
+            services.AddDbContext<DataContext>(opt => {
+                opt.UseLazyLoadingProxies();
+                opt.UseMySql(Configuration.GetConnectionString(
+                    "DefaultConnection"));
+            });
+
+            ConfigureServices(services);
+        }
+
+        // This method gets called by the runtime. Use this method to add services to the container.
+        public void ConfigureServices(IServiceCollection services)
+        {
             services.AddCors(opt => {
                 opt.AddPolicy("CorsPolicy", policy => {
-                    policy.AllowAnyHeader().AllowAnyMethod()
+                    policy
+                        .AllowAnyHeader()
+                        .AllowAnyMethod()
+                        .WithExposedHeaders("WWW-Authenticate")
                         .WithOrigins("http://localhost:3000")
                         .AllowCredentials();
                 });
@@ -97,7 +118,9 @@ namespace API
                         ValidateIssuerSigningKey = true,
                         IssuerSigningKey = key,
                         ValidateAudience = false,
-                        ValidateIssuer = false
+                        ValidateIssuer = false,
+                        ValidateLifetime = true,
+                        ClockSkew = TimeSpan.Zero
                     };
                     opt.Events = new JwtBearerEvents
                     {
@@ -139,11 +162,40 @@ namespace API
                 //app.UseHsts();
             }
 
+            app.UseXContentTypeOptions();
+            app.UseReferrerPolicy(opt => opt.NoReferrer());
+            app.UseXXssProtection(opt => opt.EnabledWithBlockMode());
+            app.UseXfo(opt => opt.Deny());
+
+            //app.UseCspReportOnly(opt => opt
+            app.UseCsp(opt => opt
+                .BlockAllMixedContent()
+                .StyleSources(s => s.Self().CustomSources(
+                    "https://fonts.googleapis.com"))
+                .FontSources(s => s.Self().CustomSources(
+                    "https://fonts.gstatic.com", "data:"))
+                .FormActions(s => s.Self())
+                .FrameAncestors(s => s.Self())
+                .ImageSources(s => s.Self().CustomSources(
+                    "https://res.cloudinary.com", "data:"))
+                .ScriptSources(s => s.Self().CustomSources(
+                    "sha256-0WYKicM3+GjBu4YhSggymxoz9710J8WrRlfsi0QBB1M="))
+            );
+
             //app.UseHttpsRedirection();
+            app.UseDefaultFiles();
+            app.UseStaticFiles();
+
             app.UseAuthentication();
             app.UseCors("CorsPolicy");
             app.UseSignalR(routes => { routes.MapHub<ChatHub>("/chat");});
-            app.UseMvc();
+            
+            app.UseMvc((routes) => {
+                routes.MapSpaFallbackRoute(
+                    name: "spa-fallback",
+                    defaults: new {controller = "Fallback", action = "Index"}
+                );
+            });
         }
     }
 }
