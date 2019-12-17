@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Domain;
-using Newtonsoft.Json;
+//using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
 namespace Application.Profiles
 {
@@ -11,7 +12,8 @@ namespace Application.Profiles
         public string Image { get; set; }
         public string Bio { get; set; }
 
-        [JsonProperty("following")]
+        //[JsonProperty("following")]
+        [JsonPropertyName("following")]
         public bool IsFollowed { get; set; }
         
         public int FollowersCount { get; set; }

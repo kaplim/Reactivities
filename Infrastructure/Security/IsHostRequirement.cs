@@ -28,15 +28,18 @@ namespace Infrastructure.Security
             AuthorizationHandlerContext authContext,
             IsHostRequirement requirement)
         {
-            if (authContext.Resource
-                is AuthorizationFilterContext filterContext)
-            {
+            // if (authContext.Resource
+            //     is AuthorizationFilterContext filterContext)
+            // {
                 var currentUserName = _httpContextAccessor.HttpContext
                     .User?.Claims?.SingleOrDefault(x =>
                         x.Type == ClaimTypes.NameIdentifier)?.Value;
 
-                var activityId = Guid.Parse(
-                    filterContext.RouteData.Values["id"].ToString());
+                // var activityId = Guid.Parse(
+                //     filterContext.RouteData.Values["id"].ToString());
+                var activityId = Guid.Parse(_httpContextAccessor.HttpContext
+                    .Request.RouteValues.SingleOrDefault(x => x.Key == "id")
+                    .Value.ToString());
 
                 var activity = _context.Activities
                     .FindAsync(activityId).Result;
@@ -46,10 +49,10 @@ namespace Infrastructure.Security
 
                 if (host?.AppUser?.UserName == currentUserName)
                     authContext.Succeed(requirement);
-            }
-            else {
-                authContext.Fail();
-            }
+            // }
+            // else {
+            //     authContext.Fail();
+            // }
 
             return Task.CompletedTask;
         }
