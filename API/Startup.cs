@@ -10,6 +10,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Hosting;
 using Persistence;
 using Microsoft.EntityFrameworkCore;
 using MediatR;
@@ -80,15 +81,16 @@ namespace API
             services.AddMediatR(typeof(ListActivities.Handler).Assembly);
             services.AddAutoMapper(typeof(ListActivities.Handler));
             services.AddSignalR();
-            services.AddMvc(opt =>
+            //services.AddMvc(opt =>
+            services.AddControllers(opt =>
             {
                 var policy = new AuthorizationPolicyBuilder()
                     .RequireAuthenticatedUser().Build();
                 opt.Filters.Add(new AuthorizeFilter(policy));
             })
                 .AddFluentValidation(config =>
-                    config.RegisterValidatorsFromAssemblyContaining<Create>())
-                .SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
+                    config.RegisterValidatorsFromAssemblyContaining<Create>());
+                //.SetCompatibilityVersion(CompatibilityVersion.Version_2_2);
 
             var builder = services.AddIdentityCore<AppUser>();
             var identityBuilder = new IdentityBuilder(
@@ -148,8 +150,10 @@ namespace API
                 (Configuration.GetSection("Cloudinary"));
         }
 
-        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env)
+        // This method gets called by the runtime. Use this method to
+        // configure the HTTP request pipeline.
+        //public void Configure(IApplicationBuilder app, IHostingEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             app.UseMiddleware<ErrorHandlingMiddleware>();
             if (env.IsDevelopment())
@@ -158,7 +162,9 @@ namespace API
             }
             else
             {
-                // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
+                // The default HSTS value is 30 days. You may want to change
+                // this for production scenarios,
+                // see https://aka.ms/aspnetcore-hsts.
                 //app.UseHsts();
             }
 
@@ -186,16 +192,28 @@ namespace API
             app.UseDefaultFiles();
             app.UseStaticFiles();
 
-            app.UseAuthentication();
+            app.UseRouting();
             app.UseCors("CorsPolicy");
-            app.UseSignalR(routes => { routes.MapHub<ChatHub>("/chat");});
-            
-            app.UseMvc((routes) => {
-                routes.MapSpaFallbackRoute(
-                    name: "spa-fallback",
-                    defaults: new {controller = "Fallback", action = "Index"}
-                );
+
+            app.UseAuthentication();
+            app.UseAuthorization();
+            //app.UseCors("CorsPolicy");
+
+            app.UseEndpoints(endpoints =>
+            {
+                endpoints.MapControllers();
+                endpoints.MapHub<ChatHub>("/chat");
+                endpoints.MapFallbackToController("Index", "Fallback");
             });
+
+            // app.UseSignalR(routes => { routes.MapHub<ChatHub>("/chat");});
+            
+            // app.UseMvc((routes) => {
+            //     routes.MapSpaFallbackRoute(
+            //         name: "spa-fallback",
+            //         defaults: new {controller = "Fallback", action = "Index"}
+            //     );
+            // });
         }
     }
 }

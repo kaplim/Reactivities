@@ -6,7 +6,7 @@ import agent from '../api/agent';
 import { toast } from 'react-toastify';
 import { RootStore } from './rootStore';
 import { setActivityProps, createAttendee } from '../common/util/util';
-import { HubConnection, HubConnectionBuilder, LogLevel } from '@aspnet/signalr';
+import { HubConnection, HubConnectionBuilder, LogLevel } from '@microsoft/signalr';
 
 const LIMIT = 2;
 
@@ -81,7 +81,7 @@ export default class ActivityStore {
             .start()
             .then(() => console.log('hub state:', this.hubConnection!.state))
             .then(() => {
-                if (this.hubConnection!.state === 1) { //'Connected') {
+                if (this.hubConnection!.state === 'Connected') { //1) { //'Connected') {
                     console.log('Attempting to join group');
                     this.hubConnection!.invoke('AddToGroup', activityId);
                 }
