@@ -146,8 +146,11 @@ namespace API
             services.AddScoped<IUserAccessor, UserAccessor>();
             services.AddScoped<IPhotoAccessor, PhotoAccessor>();
             services.AddScoped<IProfileReader, ProfileReader>();
+            services.AddScoped<IFacebookAccessor, FacebookAccessor>();
             services.Configure<CloudinarySettings>
                 (Configuration.GetSection("Cloudinary"));
+            services.Configure<FacebookAppSettings>
+                (Configuration.GetSection("Authentication:Facebook"));
         }
 
         // This method gets called by the runtime. Use this method to
@@ -177,15 +180,18 @@ namespace API
             app.UseCsp(opt => opt
                 .BlockAllMixedContent()
                 .StyleSources(s => s.Self().CustomSources(
-                    "https://fonts.googleapis.com"))
+                    "https://fonts.googleapis.com",
+                    "sha256-tsYFq5pUcggQKFXnvmlvUrk8MgTJLL1Gjnqenv201b8="))
                 .FontSources(s => s.Self().CustomSources(
                     "https://fonts.gstatic.com", "data:"))
                 .FormActions(s => s.Self())
                 .FrameAncestors(s => s.Self())
                 .ImageSources(s => s.Self().CustomSources(
-                    "https://res.cloudinary.com", "data:"))
+                    "https://res.cloudinary.com", "data:",
+                    "https://scontent.xx.fbcdn.net"))
                 .ScriptSources(s => s.Self().CustomSources(
-                    "sha256-0WYKicM3+GjBu4YhSggymxoz9710J8WrRlfsi0QBB1M="))
+                    "sha256-0WYKicM3+GjBu4YhSggymxoz9710J8WrRlfsi0QBB1M=",
+                    "https://connect.facebook.net"))
             );
 
             //app.UseHttpsRedirection();
